@@ -173,8 +173,11 @@ uint32_t *src = &_sdata; // incorrecto
 
 ### 📸 Evidencia
 
+![Falla B - código](capturas/11_fallaB_Debug_SinError.png)
 
 ![Falla B - código](capturas/07_fallaB_codigo.png)
+![Falla B - código](capturas/11_fallaB_Debug.png)
+
 
 ---
 
@@ -194,7 +197,15 @@ Se le añadió
 uint32_t a = 1;
 ```
 
-Las variables contienen valores incorrectos o basura.
+La variable contiene valores incorrectos o basura. Que se puede apreciar en la ultima screenshot en evidencia, que constrasta con la primera screenshot que es la version sin error en el startup. Se puede ver como el valor de la variable a pasa de 1 a 771778582, es decir un valor que no se corresponde con nada que le hayamos pasado.
+
+Las variables globales inicializadas se almacenan inicialmente en memoria FLASH como parte del binario, pero deben ser copiadas a RAM antes de ser utilizadas durante la ejecución.
+
+Esta copia es realizada por el Reset_Handler en el archivo startup.c, utilizando un puntero de origen (en FLASH) y uno de destino (en RAM).
+
+Al modificar incorrectamente el puntero de origen se pierde la referencia a la dirección en FLASH donde se encuentran los valores iniciales.
+
+Como resultado, no se realiza la copia correcta de .data, y las variables en RAM quedan con valores residuales o indefinidos.
 
 ---
 
