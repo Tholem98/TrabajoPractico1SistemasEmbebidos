@@ -1,0 +1,57 @@
+{
+    "version": "0.2.0", // Versión del esquema de configuración de VS Code (no cambiar)
+
+    "configurations": [
+        {
+            // Nombre que aparece en el menú de ejecución de VS Code
+            "name": "Cortex Debug with gdb-multiarch",
+
+            // Directorio de trabajo: normalmente el raíz del proyecto
+            "cwd": "${workspaceFolder}",
+
+            // Ruta al archivo ELF generado por la compilación
+            // Este archivo contiene código, símbolos, información de depuración, etc.
+            "executable": "./bin/blink_minimal.elf",
+
+            // Tipo de solicitud de depuración: "launch" = arrancar un nuevo proceso
+            "request": "launch",
+
+            // Tipo de depuración: "cortex-debug" indica que es un MCU ARM Cortex-M
+            "type": "cortex-debug",
+
+            // Punto de entrada al cual saltar automáticamente al iniciar la depuración
+            // Usualmente "main", pero puede ser otro símbolo, como "Reset_Handler"
+            "runToEntryPoint": "main",
+
+            // Ruta al binario de GDB que se usará (gdb-multiarch soporta múltiples arquitecturas)
+            // Podés reemplazarlo por la ruta absoluta si no está en el PATH
+            "gdbPath": "gdb-multiarch",
+
+            // Tipo de servidor GDB: en este caso usamos "openocd" (otros posibles: stutil, jlink)
+            "servertype": "openocd",
+
+            // Modelo del microcontrolador STM32, usado por cortex-debug para configurar el entorno
+            "device": "STM32F103C8T6",
+
+            // Archivos de configuración de OpenOCD:
+            // - interface/stlink.cfg → describe cómo conectarse al ST-Link V2
+            // - target/stm32f1x.cfg → describe cómo controlar el STM32F103C8T6
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f1x.cfg"
+            ],
+
+            // OPCIONAL: si querés compilar automáticamente antes de iniciar la depuración,
+            // descomentá la línea de abajo y creá un "task" llamado "build" en tasks.json
+            "preLaunchTask": "build",
+
+            // Archivo SVD: describe los registros y periféricos del MCU para VS Code.
+            // Esto permite ver periféricos en tiempo real (GPIO, USART, etc.)
+            "svdFile": "${workspaceFolder}/STM32F103.svd",
+
+            // Muestra la salida RAW de OpenOCD y GDB en la consola de depuración de VS Code
+            // Útil para diagnosticar problemas con la conexión ST-Link o errores del target
+            "showDevDebugOutput": "raw"
+        }
+    ]
+}
