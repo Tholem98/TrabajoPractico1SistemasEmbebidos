@@ -1,7 +1,7 @@
 # Trabajo Práctico — Arranque de Sistema en STM32 (Bare Metal)
 
 ## 1. Objetivo
-Se logró comprender los conceptos bases del funcionamiento de los cortex C3 con la intencion de poder entender cómo afectan los archivos startup, linker, y main en la memoria y ejecucion
+Se logró comprender los conceptos bases del funcionamiento de los cortex M3 con la intencion de poder entender cómo afectan los archivos startup, linker, y main en la memoria y ejecucion
 
 ## 2. Estructura del Proyecto
 
@@ -14,6 +14,24 @@ Se logró comprender los conceptos bases del funcionamiento de los cortex C3 con
 ---
 
 ## 3. Análisis del Arranque
+
+### Preguntas de comprension
+1. ¿Por qué main no puede ejecutarse correctamente si antes no se inicializa .data?
+
+Porque las variables globales inicializadas se almacenan inicialmente en FLASH, pero deben copiarse a RAM antes de ser utilizadas. Si esto no ocurre, las variables contienen valores incorrectos, lo que afecta el comportamiento del programa desde el inicio.
+
+2. ¿Qué diferencia hay entre una variable global inicializada y una no inicializada durante el arranque?
+
+Las variables inicializadas pertenecen a la sección .data y requieren ser copiadas desde FLASH a RAM. Las no inicializadas pertenecen a .bss y son simplemente puestas en cero durante el arranque.
+
+3. ¿Qué parte del proyecto define dónde vive cada sección de memoria?
+
+El archivo linker.ld define la ubicación de cada sección en memoria, tanto en FLASH como en RAM.
+
+4. ¿Qué parte del proyecto ejecuta la copia o limpieza de memoria?
+
+El archivo startup.c, específicamente el Reset_Handler, realiza la copia de .data y la inicialización de .bss.
+
 
 ### Tabla de componentes
 
@@ -238,6 +256,8 @@ Al modificar incorrectamente el puntero de origen se pierde la referencia a la d
 
 Como resultado, no se realiza la copia correcta de .data, y las variables en RAM quedan con valores residuales o indefinidos.
 
+En el archivo .map se observa que la sección .data posee una dirección de carga en FLASH (LMA) y una dirección de ejecución en RAM (VMA), lo que confirma la necesidad de la copia realizada por el startup.
+
 ---
 
 ### Corrección
@@ -342,16 +362,16 @@ LENGTH = 20K
 
 ##  8. Conclusión
 
-Reflexión final:
+Se pudo observar que el proceso de arranque en sistemas embebidos no depende únicamente del código en `main`, sino de una secuencia previa crítica definida por el hardware y el entorno de ejecución.
 
-Se pudo observar que el proceso real de arranque depende de múltiples componentes:
+El linker establece la organización de la memoria, mientras que el startup es responsable de preparar el entorno necesario para que el lenguaje C funcione correctamente, incluyendo la inicialización de `.data` y `.bss`.
 
-- la tabla de vectores
-- el linker script
-- el código de inicialización (`startup.c`)
+A través de las fallas inducidas, se evidenció que errores en estas etapas pueden impedir completamente la ejecución del programa o generar comportamientos erráticos difíciles de diagnosticar.
 
-Errores en cualquiera de estos elementos pueden impedir que el programa siquiera alcance la función `main()`.
+En particular, se comprendió que:
 
-##  9. Proximos pasos
+* la ubicación de la vector table es crítica para el inicio del sistema
+* la correcta copia de .data es esencial para la coherencia de las variables
+* el uso de memoria dinámica (stack) puede generar fallas no deterministas si no se controla adecuadamente
 
-Debido a inconvenientes en la blue pill que impidieron el correcto flasheo de la placa, quedó pendiente la recopilacion de datos en momento de ejecucion. Se pudo explorar las modificaciones en la compilacion, sin embargo el debuggeo y el analisis de las variables en runtime queda pendiente para ampliarlo en proximas versiones
+Esto demuestra que el comportamiento del sistema está fuertemente condicionado por la configuración de memoria y el código de arranque, incluso antes de que se ejecute la lógica principal del programa.
