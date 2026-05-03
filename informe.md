@@ -147,7 +147,28 @@ Al ejecutarlo, el microcontrolador no podrá encontrar correctamente el `Reset_H
 
 ### Resultado observado
 
+Al ejecutar el programa con la vector table ubicada en una dirección incorrecta, el microcontrolador no logró iniciar correctamente la ejecución del programa.
 
+Se observó que:
+
+el programa no alcanzó la función main
+el LED no realizó el parpadeo esperado
+el debugger no logró posicionarse en el Reset_Handler ni en main
+
+Esto indica que el flujo de arranque se interrumpe inmediatamente luego del reset.
+
+Al producirse un reset, el microcontrolador lee la tabla de vectores desde la dirección base de la memoria FLASH (0x08000000).
+
+En esta tabla se encuentran:
+
+la dirección inicial del stack pointer
+la dirección del Reset_Handler
+
+Al modificar la ubicación de la sección .isr_vector en el linker la tabla de vectores deja de estar en la dirección esperada por el hardware.
+
+Como consecuencia, el microcontrolador intenta leer direcciones inválidas o basura desde 0x08000000, lo que provoca que no pueda saltar correctamente al Reset_Handler.
+
+Esto genera una falla inmediata en el arranque, incluso antes de que el programa pueda ejecutar cualquier instrucción en main.
 
 ---
 
@@ -197,7 +218,7 @@ Se le añadió
 uint32_t a = 1;
 ```
 
-La variable contiene valores incorrectos o basura. Que se puede apreciar en la ultima screenshot en evidencia, que constrasta con la primera screenshot que es la version sin error en el startup. Se puede ver como el valor de la variable a pasa de 1 a 771778582, es decir un valor que no se corresponde con nada que le hayamos pasado.
+La variable contiene valores incorrectos o basura. Que se puede apreciar en la ultima screenshot en evidencia, que constrasta con la primera screenshot que es la version sin error en el startup. Se puede ver como el valor de la variable a pasa de 1 a 771778582, es decir un valor que no se corresponde con el valor inicial definido en el código.
 
 Las variables globales inicializadas se almacenan inicialmente en memoria FLASH como parte del binario, pero deben ser copiadas a RAM antes de ser utilizadas durante la ejecución.
 
