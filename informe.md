@@ -137,6 +137,11 @@ De la siguiente manera
 
 ![Falla A - map](capturas/06_fallaA_map.png)
 
+![Falla A - debug](capturas/12_fallaA_Debug.png)
+
+![Falla A - log](capturas/12_fallaA_Log.png)
+
+
 ---
 
 ### Predicción
@@ -147,15 +152,16 @@ Al ejecutarlo, el microcontrolador no podrá encontrar correctamente el `Reset_H
 
 ### Resultado observado
 
-Al ejecutar el programa con la vector table ubicada en una dirección incorrecta, el microcontrolador no logró iniciar correctamente la ejecución del programa.
+Al ejecutar el programa con la vector table ubicada en una dirección incorrecta, el microcontrolador no logró seguir el flujo normal de arranque.
 
 Se observó que:
 
 el programa no alcanzó la función main
-el LED no realizó el parpadeo esperado
-el debugger no logró posicionarse en el Reset_Handler ni en main
+el LED no realizó el comportamiento esperado
+al pausar la ejecución con el debugger, el contador de programa (PC) se encontraba en una dirección inesperada (0x08000158)
+el debugger no pudo asociar la ejecución a ninguna función del código fuente, mostrando “unknown source”
 
-Esto indica que el flujo de arranque se interrumpe inmediatamente luego del reset.
+Esto indica que el microcontrolador está ejecutando código fuera del flujo normal del programa.
 
 Al producirse un reset, el microcontrolador lee la tabla de vectores desde la dirección base de la memoria FLASH (0x08000000).
 
@@ -166,9 +172,13 @@ la dirección del Reset_Handler
 
 Al modificar la ubicación de la sección .isr_vector en el linker la tabla de vectores deja de estar en la dirección esperada por el hardware.
 
-Como consecuencia, el microcontrolador intenta leer direcciones inválidas o basura desde 0x08000000, lo que provoca que no pueda saltar correctamente al Reset_Handler.
+Como consecuencia, el microcontrolador intenta leer direcciones inválidas o basura desde 0x08000000, lo que provoca que no pueda saltar correctamente al Reset_Handler. El microcontrolador carga direcciones incorrectas y comienza a ejecutar instrucciones desde una ubicación inválida o inesperada.
 
-Esto genera una falla inmediata en el arranque, incluso antes de que el programa pueda ejecutar cualquier instrucción en main.
+Esto provoca que el flujo de ejecución no alcance nunca la función main, y que el debugger no pueda asociar el programa en ejecución con el código fuente, resultando en el estado “unknown source”.
+
+En la versión sana, el debugger se posiciona correctamente en main, mientras que en la versión defectuosa no logra hacerlo.
+
+A diferencia de otras fallas, este error no siempre produce un HardFault inmediato, sino que puede derivar en ejecución de código inválido, dificultando su diagnóstico
 
 ---
 
